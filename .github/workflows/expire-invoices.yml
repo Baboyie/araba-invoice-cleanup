@@ -1,0 +1,22 @@
+name: Expire unpaid ARABA invoices
+on:
+  schedule:
+    - cron: '2-57/5 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: araba-invoice-cleanup
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Cancel overdue unpaid invoices
+        env:
+          CLEANUP_SECRET: ${{ secrets.ARABA_INVOICE_CLEANUP_SECRET }}
+        run: |
+          curl --fail-with-body --silent --show-error --max-time 65 \
+            --request POST \
+            --header "Authorization: Bearer $CLEANUP_SECRET" \
+            https://araba-store-rho.vercel.app/api/checkout/expire/
